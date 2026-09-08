@@ -35,9 +35,7 @@ public class User {
     private LocalDateTime updatedAt;
 
 
-    // =========================
-    // Constructors
-    // =========================
+
 
     public User() {
     }
@@ -51,9 +49,7 @@ public class User {
     }
 
 
-    // =========================
-    // Lifecycle Methods
-    // =========================
+
 
     @PrePersist
     protected void onCreate() {
@@ -71,9 +67,7 @@ public class User {
     }
 
 
-    // =========================
-    // Getters and Setters
-    // =========================
+
 
     public Long getId() {
         return id;
