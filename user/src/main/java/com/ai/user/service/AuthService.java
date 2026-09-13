@@ -1,5 +1,8 @@
 package com.ai.user.service;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import com.ai.user.dto.LoginRequest;
 import com.ai.user.dto.LoginResponse;
 import com.ai.user.dto.RegisterRequest;
@@ -7,9 +10,6 @@ import com.ai.user.model.Role;
 import com.ai.user.model.User;
 import com.ai.user.repository.UserRepository;
 import com.ai.user.security.JwtService;
-
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
@@ -28,9 +28,7 @@ public class AuthService {
         this.jwtService = jwtService;
     }
 
-    // ============================
-    // REGISTER USER
-    // ============================
+    
 
     public String register(RegisterRequest request) {
 
@@ -58,9 +56,7 @@ public class AuthService {
     }
 
 
-    // ============================
-    // LOGIN USER
-    // ============================
+    
 
     public LoginResponse login(LoginRequest request) {
 

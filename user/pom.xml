@@ -55,6 +55,7 @@
             <artifactId>mysql-connector-j</artifactId>
             <scope>runtime</scope>
         </dependency>
+        
 
         <!-- JWT -->
         <dependency>
@@ -89,6 +90,7 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
+
 
     </dependencies>
 
