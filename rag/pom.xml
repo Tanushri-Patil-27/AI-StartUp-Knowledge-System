@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
@@ -7,7 +6,11 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- Spring Boot -->
+
+    <!-- ================================================= -->
+    <!-- SPRING BOOT -->
+    <!-- ================================================= -->
+
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -15,132 +18,120 @@
         <relativePath/>
     </parent>
 
-    <!-- Project Information -->
+
+    <!-- ================================================= -->
+    <!-- PROJECT INFORMATION -->
+    <!-- ================================================= -->
+
     <groupId>com.ai</groupId>
+
     <artifactId>ai-rag-service</artifactId>
+
     <version>0.0.1-SNAPSHOT</version>
 
-    <name>AI-RAG-Service</name>
-    <description>AI RAG Service for Startup Knowledge and Decision Memory</description>
+    <name>ai-rag-service</name>
+
+    <description>
+        AI RAG Service using Spring AI, Google Gemini and Qdrant
+    </description>
 
 
-    <!-- Versions -->
+    <!-- ================================================= -->
+    <!-- PROPERTIES -->
+    <!-- ================================================= -->
+
     <properties>
 
+        <!-- Java -->
         <java.version>21</java.version>
 
+        <!-- Spring Cloud -->
         <spring-cloud.version>2025.0.0</spring-cloud.version>
 
-        <spring-ai.version>1.0.9</spring-ai.version>
+        <!-- Spring AI -->
+        <spring-ai.version>1.1.0</spring-ai.version>
 
     </properties>
 
 
-    <!-- Dependency Management -->
-    <dependencyManagement>
+    <!-- ================================================= -->
+    <!-- DEPENDENCIES -->
+    <!-- ================================================= -->
 
-        <dependencies>
-
-            <!-- Spring Cloud BOM -->
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-dependencies</artifactId>
-                <version>${spring-cloud.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <!-- Spring AI BOM -->
-            <dependency>
-                <groupId>org.springframework.ai</groupId>
-                <artifactId>spring-ai-bom</artifactId>
-                <version>${spring-ai.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-        </dependencies>
-
-    </dependencyManagement>
-
-
-    <!-- Dependencies -->
     <dependencies>
 
 
-        <!-- =============================== -->
-        <!-- Spring Boot Web -->
-        <!-- =============================== -->
+        <!-- ============================================= -->
+        <!-- SPRING BOOT -->
+        <!-- ============================================= -->
 
+        <!-- Spring Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
 
-        <!-- =============================== -->
         <!-- Spring Security -->
-        <!-- =============================== -->
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
 
-        <!-- =============================== -->
         <!-- Validation -->
-        <!-- =============================== -->
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
 
-        <!-- =============================== -->
-        <!-- OpenFeign -->
-        <!-- =============================== -->
+        <!-- ============================================= -->
+        <!-- SPRING CLOUD -->
+        <!-- ============================================= -->
 
+        <!-- OpenFeign -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-openfeign</artifactId>
         </dependency>
 
 
-        <!-- =============================== -->
         <!-- Eureka Client -->
-        <!-- =============================== -->
-
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
 
 
-        <!-- =============================== -->
-        <!-- Spring Cloud Load Balancer -->
-        <!-- =============================== -->
-
+        <!-- Load Balancer -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-loadbalancer</artifactId>
         </dependency>
 
 
-        <!-- =============================== -->
-        <!-- Spring AI - OpenAI -->
-        <!-- =============================== -->
+        <!-- ============================================= -->
+        <!-- SPRING AI - GOOGLE GEMINI -->
+        <!-- ============================================= -->
 
+        <!-- Gemini Chat Model -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-starter-model-openai</artifactId>
+            <artifactId>spring-ai-starter-model-google-genai</artifactId>
         </dependency>
 
 
-        <!-- =============================== -->
-        <!-- Spring AI - Qdrant -->
-        <!-- =============================== -->
+        <!-- Gemini Text Embedding Model -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-model-google-genai-embedding</artifactId>
+        </dependency>
+
+
+        <!-- ============================================= -->
+        <!-- QDRANT VECTOR DATABASE -->
+        <!-- ============================================= -->
 
         <dependency>
             <groupId>org.springframework.ai</groupId>
@@ -148,16 +139,19 @@
         </dependency>
 
 
-        <!-- =============================== -->
+        <!-- ============================================= -->
         <!-- JWT -->
-        <!-- =============================== -->
+        <!-- ============================================= -->
 
+        <!-- JWT API -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
             <version>0.12.6</version>
         </dependency>
 
+
+        <!-- JWT Implementation -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-impl</artifactId>
@@ -165,6 +159,8 @@
             <scope>runtime</scope>
         </dependency>
 
+
+        <!-- JWT Jackson -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-jackson</artifactId>
@@ -173,9 +169,9 @@
         </dependency>
 
 
-        <!-- =============================== -->
-        <!-- Actuator -->
-        <!-- =============================== -->
+        <!-- ============================================= -->
+        <!-- ACTUATOR -->
+        <!-- ============================================= -->
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -183,10 +179,11 @@
         </dependency>
 
 
-        <!-- =============================== -->
-        <!-- Testing -->
-        <!-- =============================== -->
+        <!-- ============================================= -->
+        <!-- TESTING -->
+        <!-- ============================================= -->
 
+        <!-- Spring Boot Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -194,10 +191,7 @@
         </dependency>
 
 
-        <!-- =============================== -->
-        <!-- Security Testing -->
-        <!-- =============================== -->
-
+        <!-- Spring Security Test -->
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-test</artifactId>
@@ -208,7 +202,50 @@
     </dependencies>
 
 
-    <!-- Build -->
+    <!-- ================================================= -->
+    <!-- DEPENDENCY MANAGEMENT -->
+    <!-- ================================================= -->
+
+    <dependencyManagement>
+
+        <dependencies>
+
+
+            <!-- ========================================= -->
+            <!-- SPRING CLOUD BOM -->
+            <!-- ========================================= -->
+
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+
+            <!-- ========================================= -->
+            <!-- SPRING AI BOM -->
+            <!-- ========================================= -->
+
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>${spring-ai.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+
+        </dependencies>
+
+    </dependencyManagement>
+
+
+    <!-- ================================================= -->
+    <!-- BUILD -->
+    <!-- ================================================= -->
+
     <build>
 
         <plugins>
