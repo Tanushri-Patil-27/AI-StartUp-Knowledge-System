@@ -8,9 +8,12 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="OrganizationService" />
+        <module name="ai-rag-service" />
         <module name="user-service" />
         <module name="APIGateway" />
         <module name="AuditService" />
+        <module name="eureka-server" />
+        <module name="Notification" />
         <module name="document-service" />
       </profile>
     </annotationProcessing>
@@ -22,8 +25,11 @@
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="APIGateway" options="-parameters" />
       <module name="AuditService" options="-parameters" />
+      <module name="Notification" options="-parameters" />
       <module name="OrganizationService" options="-parameters" />
+      <module name="ai-rag-service" options="-parameters" />
       <module name="document-service" options="-parameters" />
+      <module name="eureka-server" options="-parameters" />
       <module name="user-service" options="-parameters" />
       <module name="user-service (1)" options="-parameters" />
     </option>
