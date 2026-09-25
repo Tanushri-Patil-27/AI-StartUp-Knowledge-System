@@ -6,6 +6,7 @@ public class UserResponse {
     private String name;
     private String email;
     private String role;
+    private Long organizationId;
 
     public UserResponse() {
     }
@@ -14,12 +15,14 @@ public class UserResponse {
             Long id,
             String name,
             String email,
-            String role) {
+            String role,
+            Long organizationId) {
 
         this.id = id;
         this.name = name;
         this.email = email;
         this.role = role;
+        this.organizationId = organizationId;
     }
 
     public Long getId() {
@@ -52,5 +55,13 @@ public class UserResponse {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public Long getOrganizationId() {
+        return organizationId;
+    }
+
+    public void setOrganizationId(Long organizationId) {
+        this.organizationId = organizationId;
     }
 }

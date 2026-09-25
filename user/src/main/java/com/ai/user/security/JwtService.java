@@ -1,17 +1,18 @@
 package com.ai.user.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
-import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.crypto.SecretKey;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 
 @Service
 public class JwtService {
@@ -22,9 +23,9 @@ public class JwtService {
     @Value("${jwt.expiration}")
     private long expiration;
 
-    // ============================
-    // CREATE SECRET KEY
-    // ============================
+    // =========================================================
+    // SIGNING KEY
+    // =========================================================
 
     private SecretKey getSigningKey() {
 
@@ -33,21 +34,27 @@ public class JwtService {
         );
     }
 
-
-    // ============================
+    // =========================================================
     // GENERATE JWT
-    // ============================
+    // =========================================================
 
-    public String generateToken(String email, String role) {
+    public String generateToken(
+            String email,
+            String role,
+            Long organizationId) {
 
-        Map<String, Object> claims = new HashMap<>();
+        Map<String, Object> claims =
+                new HashMap<>();
 
         claims.put("role", role);
+        claims.put("organizationId", organizationId);
 
         Date now = new Date();
 
         Date expiryDate =
-                new Date(now.getTime() + expiration);
+                new Date(
+                        now.getTime() + expiration
+                );
 
         return Jwts.builder()
                 .claims(claims)
@@ -58,20 +65,19 @@ public class JwtService {
                 .compact();
     }
 
-
-    // ============================
+    // =========================================================
     // EXTRACT EMAIL
-    // ============================
+    // =========================================================
 
     public String extractEmail(String token) {
 
-        return extractAllClaims(token).getSubject();
+        return extractAllClaims(token)
+                .getSubject();
     }
 
-
-    // ============================
+    // =========================================================
     // EXTRACT ROLE
-    // ============================
+    // =========================================================
 
     public String extractRole(String token) {
 
@@ -79,10 +85,28 @@ public class JwtService {
                 .get("role", String.class);
     }
 
+    // =========================================================
+    // EXTRACT ORGANIZATION
+    // =========================================================
 
-    // ============================
+    public Long extractOrganizationId(
+            String token) {
+
+        Number organizationId =
+                extractAllClaims(token)
+                        .get(
+                                "organizationId",
+                                Number.class
+                        );
+
+        return organizationId != null
+                ? organizationId.longValue()
+                : null;
+    }
+
+    // =========================================================
     // VALIDATE TOKEN
-    // ============================
+    // =========================================================
 
     public boolean isTokenValid(
             String token,
@@ -102,24 +126,24 @@ public class JwtService {
         }
     }
 
+    // =========================================================
+    // EXPIRATION
+    // =========================================================
 
-    // ============================
-    // CHECK EXPIRATION
-    // ============================
-
-    private boolean isTokenExpired(String token) {
+    private boolean isTokenExpired(
+            String token) {
 
         return extractAllClaims(token)
                 .getExpiration()
                 .before(new Date());
     }
 
+    // =========================================================
+    // CLAIMS
+    // =========================================================
 
-    // ============================
-    // EXTRACT CLAIMS
-    // ============================
-
-    private Claims extractAllClaims(String token) {
+    private Claims extractAllClaims(
+            String token) {
 
         return Jwts.parser()
                 .verifyWith(getSigningKey())

@@ -12,20 +12,33 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // ============================
-    // USER ALREADY EXISTS
-    // ============================
-
     @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<Map<String, Object>> handleUserAlreadyExists(
+    public ResponseEntity<Map<String, Object>>
+    handleUserAlreadyExists(
             UserAlreadyExistsException ex) {
 
-        Map<String, Object> response = new HashMap<>();
+        Map<String, Object> response =
+                new HashMap<>();
 
-        response.put("timestamp", LocalDateTime.now());
-        response.put("status", HttpStatus.CONFLICT.value());
-        response.put("error", "User Already Exists");
-        response.put("message", ex.getMessage());
+        response.put(
+                "timestamp",
+                LocalDateTime.now()
+        );
+
+        response.put(
+                "status",
+                HttpStatus.CONFLICT.value()
+        );
+
+        response.put(
+                "error",
+                "User Already Exists"
+        );
+
+        response.put(
+                "message",
+                ex.getMessage()
+        );
 
         return new ResponseEntity<>(
                 response,
@@ -33,21 +46,33 @@ public class GlobalExceptionHandler {
         );
     }
 
-
-    // ============================
-    // USER NOT FOUND
-    // ============================
-
     @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleUserNotFound(
+    public ResponseEntity<Map<String, Object>>
+    handleUserNotFound(
             UserNotFoundException ex) {
 
-        Map<String, Object> response = new HashMap<>();
+        Map<String, Object> response =
+                new HashMap<>();
 
-        response.put("timestamp", LocalDateTime.now());
-        response.put("status", HttpStatus.NOT_FOUND.value());
-        response.put("error", "User Not Found");
-        response.put("message", ex.getMessage());
+        response.put(
+                "timestamp",
+                LocalDateTime.now()
+        );
+
+        response.put(
+                "status",
+                HttpStatus.NOT_FOUND.value()
+        );
+
+        response.put(
+                "error",
+                "User Not Found"
+        );
+
+        response.put(
+                "message",
+                ex.getMessage()
+        );
 
         return new ResponseEntity<>(
                 response,
@@ -55,21 +80,67 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Map<String, Object>>
+    handleRuntimeException(
+            RuntimeException ex) {
 
-    // ============================
-    // GENERAL EXCEPTION
-    // ============================
+        Map<String, Object> response =
+                new HashMap<>();
+
+        response.put(
+                "timestamp",
+                LocalDateTime.now()
+        );
+
+        response.put(
+                "status",
+                HttpStatus.BAD_REQUEST.value()
+        );
+
+        response.put(
+                "error",
+                "Bad Request"
+        );
+
+        response.put(
+                "message",
+                ex.getMessage()
+        );
+
+        return new ResponseEntity<>(
+                response,
+                HttpStatus.BAD_REQUEST
+        );
+    }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGeneralException(
+    public ResponseEntity<Map<String, Object>>
+    handleGeneralException(
             Exception ex) {
 
-        Map<String, Object> response = new HashMap<>();
+        Map<String, Object> response =
+                new HashMap<>();
 
-        response.put("timestamp", LocalDateTime.now());
-        response.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
-        response.put("error", "Internal Server Error");
-        response.put("message", "Something went wrong");
+        response.put(
+                "timestamp",
+                LocalDateTime.now()
+        );
+
+        response.put(
+                "status",
+                HttpStatus.INTERNAL_SERVER_ERROR.value()
+        );
+
+        response.put(
+                "error",
+                "Internal Server Error"
+        );
+
+        response.put(
+                "message",
+                "Something went wrong"
+        );
 
         return new ResponseEntity<>(
                 response,

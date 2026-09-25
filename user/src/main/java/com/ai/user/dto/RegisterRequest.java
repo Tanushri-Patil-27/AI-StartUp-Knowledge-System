@@ -17,6 +17,9 @@ public class RegisterRequest {
     @Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
 
+    @NotBlank(message = "Invitation token is required")
+    private String invitationToken;
+
     public RegisterRequest() {
     }
 
@@ -42,5 +45,13 @@ public class RegisterRequest {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getInvitationToken() {
+        return invitationToken;
+    }
+
+    public void setInvitationToken(String invitationToken) {
+        this.invitationToken = invitationToken;
     }
 }
