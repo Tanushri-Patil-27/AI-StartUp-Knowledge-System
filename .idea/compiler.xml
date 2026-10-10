@@ -9,6 +9,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="OrganizationService" />
         <module name="ai-rag-service" />
+        <module name="searchService" />
         <module name="user-service" />
         <module name="APIGateway" />
         <module name="AuditService" />
@@ -30,6 +31,7 @@
       <module name="ai-rag-service" options="-parameters" />
       <module name="document-service" options="-parameters" />
       <module name="eureka-server" options="-parameters" />
+      <module name="searchService" options="-parameters" />
       <module name="user-service" options="-parameters" />
       <module name="user-service (1)" options="-parameters" />
     </option>
