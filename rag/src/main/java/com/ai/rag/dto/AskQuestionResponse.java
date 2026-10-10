@@ -37,6 +37,7 @@ public class AskQuestionResponse {
         return answer;
     }
 
+
     public void setAnswer(String answer) {
         this.answer = answer;
     }
@@ -45,6 +46,7 @@ public class AskQuestionResponse {
     public String getQuestion() {
         return question;
     }
+
 
     public void setQuestion(String question) {
         this.question = question;
@@ -55,6 +57,7 @@ public class AskQuestionResponse {
         return organizationId;
     }
 
+
     public void setOrganizationId(Long organizationId) {
         this.organizationId = organizationId;
     }
@@ -63,6 +66,7 @@ public class AskQuestionResponse {
     public List<SourceDocumentResponse> getSources() {
         return sources;
     }
+
 
     public void setSources(
             List<SourceDocumentResponse> sources) {

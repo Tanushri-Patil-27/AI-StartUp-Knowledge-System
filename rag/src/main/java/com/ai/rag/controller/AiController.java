@@ -1,14 +1,12 @@
 package com.ai.rag.controller;
 
-import com.ai.rag.client.OrganizationClient;
+import com.ai.rag.config.JwtUserPrincipal;
 import com.ai.rag.dto.AskQuestionRequest;
 import com.ai.rag.dto.AskQuestionResponse;
-import com.ai.rag.dto.OrganizationMemberAccessResponse;
 import com.ai.rag.service.AiService;
 
 import jakarta.validation.Valid;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.security.core.Authentication;
@@ -24,25 +22,18 @@ public class AiController {
 
     private final AiService aiService;
 
-    private final OrganizationClient organizationClient;
-
 
     public AiController(
-            AiService aiService,
-            OrganizationClient organizationClient) {
+            AiService aiService) {
 
         this.aiService = aiService;
-        this.organizationClient =
-                organizationClient;
     }
 
 
-    /**
-     * Ask a question about the organization's
-     * stored knowledge.
-     *
-     * POST /api/ai/ask
-     */
+    // =========================================================
+    // ASK AI
+    // =========================================================
+
     @PostMapping("/ask")
     public ResponseEntity<AskQuestionResponse> askQuestion(
 
@@ -53,93 +44,75 @@ public class AiController {
             Authentication authentication) {
 
 
-        /*
-         * Get currently authenticated user ID.
-         *
-         * JwtAuthenticationFilter sets userId
-         * as authentication.getName().
-         */
-        Long currentUserId;
+        // =====================================================
+        // GET JWT PRINCIPAL
+        // =====================================================
 
-        try {
+        JwtUserPrincipal principal =
+                (JwtUserPrincipal)
+                        authentication.getPrincipal();
 
-            currentUserId =
-                    Long.valueOf(
-                            authentication.getName()
-                    );
 
-        } catch (NumberFormatException e) {
+        // =====================================================
+        // GET USER INFORMATION FROM JWT
+        // =====================================================
+
+        Long userId =
+                principal.getUserId();
+
+        Long organizationId =
+                principal.getOrganizationId();
+
+        String role =
+                principal.getRole();
+
+
+        // =====================================================
+        // BASIC VALIDATION
+        // =====================================================
+
+        if (organizationId == null) {
 
             throw new IllegalStateException(
-                    "JWT does not contain a valid userId. "
-                    + "Update User Service JWT to include userId."
+                    "JWT does not contain organizationId"
             );
         }
 
 
-        /*
-         * Check whether user belongs to
-         * requested organization.
-         */
-        OrganizationMemberAccessResponse access =
-                organizationClient.checkMemberAccess(
-                        request.getOrganizationId(),
-                        currentUserId
-                );
+        if (userId == null) {
 
-
-        if (access == null
-                || !access.isMember()) {
-
-            return ResponseEntity
-                    .status(HttpStatus.FORBIDDEN)
-                    .body(
-                            new AskQuestionResponse(
-                                    "You do not have access to this organization.",
-                                    request.getQuestion(),
-                                    request.getOrganizationId(),
-                                    new ArrayList<>()
-                            )
-                    );
+            throw new IllegalStateException(
+                    "JWT does not contain userId"
+            );
         }
 
 
-        /*
-         * Ask AI service.
-         *
-         * AI service will:
-         *
-         * Question
-         *      ↓
-         * Qdrant similarity search
-         *      ↓
-         * Relevant chunks
-         *      ↓
-         * Context
-         *      ↓
-         * OpenAI
-         *      ↓
-         * Answer
-         */
+        // =====================================================
+        // ASK AI
+        // =====================================================
+
         String answer =
                 aiService.askQuestion(
                         request.getQuestion(),
-                        request.getOrganizationId()
+                        organizationId
                 );
 
 
-        /*
-         * Build response.
-         */
+        // =====================================================
+        // RESPONSE
+        // =====================================================
+
         AskQuestionResponse response =
                 new AskQuestionResponse(
                         answer,
                         request.getQuestion(),
-                        request.getOrganizationId(),
+                        organizationId,
                         new ArrayList<>()
                 );
 
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                response
+        );
     }
 }

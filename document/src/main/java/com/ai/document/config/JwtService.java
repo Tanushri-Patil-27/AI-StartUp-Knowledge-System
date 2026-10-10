@@ -18,7 +18,9 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String secret;
 
-     
+    // =========================================================
+    // SIGNING KEY
+    // =========================================================
 
     private SecretKey getSigningKey() {
 
@@ -27,7 +29,9 @@ public class JwtService {
         );
     }
 
-     
+    // =========================================================
+    // EXTRACT EMAIL
+    // =========================================================
 
     public String extractEmail(String token) {
 
@@ -35,7 +39,23 @@ public class JwtService {
                 .getSubject();
     }
 
-     
+    // =========================================================
+    // EXTRACT USER ID
+    // =========================================================
+
+    public Long extractUserId(String token) {
+
+        Number userId = extractAllClaims(token)
+                .get("userId", Number.class);
+
+        return userId != null
+                ? userId.longValue()
+                : null;
+    }
+
+    // =========================================================
+    // EXTRACT ROLE
+    // =========================================================
 
     public String extractRole(String token) {
 
@@ -43,7 +63,23 @@ public class JwtService {
                 .get("role", String.class);
     }
 
-     
+    // =========================================================
+    // EXTRACT ORGANIZATION ID
+    // =========================================================
+
+    public Long extractOrganizationId(String token) {
+
+        Number organizationId = extractAllClaims(token)
+                .get("organizationId", Number.class);
+
+        return organizationId != null
+                ? organizationId.longValue()
+                : null;
+    }
+
+    // =========================================================
+    // VALIDATE TOKEN
+    // =========================================================
 
     public boolean isTokenValid(String token) {
 
@@ -62,7 +98,9 @@ public class JwtService {
         }
     }
 
-  
+    // =========================================================
+    // EXTRACT ALL CLAIMS
+    // =========================================================
 
     private Claims extractAllClaims(String token) {
 

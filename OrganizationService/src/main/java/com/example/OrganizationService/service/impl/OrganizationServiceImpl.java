@@ -1,368 +1,323 @@
 package com.example.OrganizationService.service.impl;
 
-import com.example.OrganizationService.dto.*;
+import com.example.OrganizationService.dto.CreateOrganizationRequest;
+import com.example.OrganizationService.dto.OrganizationResponse;
+import com.example.OrganizationService.dto.UpdateOrganizationRequest;
 import com.example.OrganizationService.exception.BadRequestException;
 import com.example.OrganizationService.exception.ResourceNotFoundException;
 import com.example.OrganizationService.model.Organization;
-import com.example.OrganizationService.model.OrganizationMember;
-import com.example.OrganizationService.model.OrganizationRole;
-import com.example.OrganizationService.repository.OrganizationMemberRepository;
 import com.example.OrganizationService.repository.OrganizationRepository;
+import com.example.OrganizationService.security.JwtUserPrincipal;
 import com.example.OrganizationService.service.OrganizationService;
+
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class OrganizationServiceImpl implements OrganizationService {
+public class OrganizationServiceImpl
+        implements OrganizationService {
 
     private final OrganizationRepository organizationRepository;
-    private final OrganizationMemberRepository memberRepository;
 
+
+    // =========================================================
+    // CREATE ORGANIZATION
+    // =========================================================
 
     @Override
     public OrganizationResponse createOrganization(
-            CreateOrganizationRequest request,
-            Long currentUserId) {
+            CreateOrganizationRequest request) {
 
-        if (organizationRepository.existsByName(request.name())) {
+        JwtUserPrincipal user =
+                getCurrentUser();
+
+        /*
+         * Only ADMIN can create an organization.
+         */
+        if (!"ADMIN".equals(user.getRole())) {
+
             throw new BadRequestException(
-                    "Organization name already exists");
+                    "Only ADMIN can create an organization"
+            );
         }
 
-        String slug = generateUniqueSlug(request.name());
+        /*
+         * For the current single-organization architecture,
+         * prevent multiple organizations.
+         */
+        if (organizationRepository.count() > 0) {
 
-        Organization organization = Organization.builder()
-                .name(request.name())
-                .slug(slug)
-                .description(request.description())
-                .build();
+            throw new BadRequestException(
+                    "Organization already exists"
+            );
+        }
 
-        organization = organizationRepository.save(organization);
+        if (organizationRepository.existsByName(
+                request.name())) {
 
-        OrganizationMember owner = OrganizationMember.builder()
-                .organizationId(organization.getId())
-                .userId(currentUserId)
-                .role(OrganizationRole.OWNER)
-                .build();
+            throw new BadRequestException(
+                    "Organization name already exists"
+            );
+        }
 
-        memberRepository.save(owner);
+        String slug =
+                generateUniqueSlug(request.name());
+
+        Organization organization =
+                Organization.builder()
+                        .name(request.name())
+                        .slug(slug)
+                        .description(request.description())
+                        .build();
+
+        organization =
+                organizationRepository.save(
+                        organization
+                );
 
         return mapToResponse(organization);
     }
 
+
+    // =========================================================
+    // GET ORGANIZATION
+    // =========================================================
 
     @Override
     @Transactional(readOnly = true)
     public OrganizationResponse getOrganization(
-            Long organizationId,
-            Long currentUserId) {
+            Long organizationId) {
 
-        getAuthorizedMember(organizationId, currentUserId);
+        JwtUserPrincipal user =
+                getCurrentUser();
+
+        validateOrganizationAccess(
+                organizationId,
+                user
+        );
 
         Organization organization =
-                getOrganizationOrThrow(organizationId);
+                getOrganizationOrThrow(
+                        organizationId
+                );
 
         return mapToResponse(organization);
     }
 
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<OrganizationResponse> getMyOrganizations(
-            Long currentUserId) {
-
-        List<OrganizationMember> memberships =
-                memberRepository.findByUserId(currentUserId);
-
-        return memberships.stream()
-                .map(member ->
-                        getOrganizationOrThrow(
-                                member.getOrganizationId()))
-                .map(this::mapToResponse)
-                .toList();
-    }
-
+    // =========================================================
+    // UPDATE ORGANIZATION
+    // =========================================================
 
     @Override
     public OrganizationResponse updateOrganization(
             Long organizationId,
-            UpdateOrganizationRequest request,
-            Long currentUserId) {
+            UpdateOrganizationRequest request) {
 
-        OrganizationMember member =
-                getAuthorizedMember(
-                        organizationId,
-                        currentUserId);
+        JwtUserPrincipal user =
+                getCurrentUser();
 
-        checkAdminOrOwner(member);
+        validateOrganizationAccess(
+                organizationId,
+                user
+        );
 
-        Organization organization =
-                getOrganizationOrThrow(organizationId);
-
-        if (!organization.getName().equals(request.name())
-                && organizationRepository.existsByName(request.name())) {
+        /*
+         * Only ADMIN can update organization details.
+         */
+        if (!"ADMIN".equals(user.getRole())) {
 
             throw new BadRequestException(
-                    "Organization name already exists");
+                    "Only ADMIN can update the organization"
+            );
         }
 
-        organization.setName(request.name());
-        organization.setDescription(request.description());
+        Organization organization =
+                getOrganizationOrThrow(
+                        organizationId
+                );
 
-        organizationRepository.save(organization);
+        /*
+         * Check duplicate organization name.
+         */
+        if (!organization.getName()
+                .equals(request.name())
+                && organizationRepository.existsByName(
+                        request.name())) {
+
+            throw new BadRequestException(
+                    "Organization name already exists"
+            );
+        }
+
+        organization.setName(
+                request.name()
+        );
+
+        organization.setDescription(
+                request.description()
+        );
+
+        /*
+         * Keep slug unchanged when organization
+         * name changes.
+         *
+         * This prevents breaking URLs or references
+         * based on the existing slug.
+         */
+
+        organizationRepository.save(
+                organization
+        );
 
         return mapToResponse(organization);
     }
 
 
+    // =========================================================
+    // DELETE ORGANIZATION
+    // =========================================================
+
     @Override
     public void deleteOrganization(
-            Long organizationId,
-            Long currentUserId) {
+            Long organizationId) {
 
-        OrganizationMember member =
-                getAuthorizedMember(
-                        organizationId,
-                        currentUserId);
+        JwtUserPrincipal user =
+                getCurrentUser();
 
-        if (member.getRole() != OrganizationRole.OWNER) {
-            throw new BadRequestException(
-                    "Only organization owner can delete the organization");
-        }
-
-        getOrganizationOrThrow(organizationId);
-
-        // Delete memberships first
-        memberRepository.deleteAll(
-                memberRepository.findByOrganizationId(
-                        organizationId)
+        validateOrganizationAccess(
+                organizationId,
+                user
         );
 
-        organizationRepository.deleteById(organizationId);
-    }
-
-
-    @Override
-    public OrganizationMemberResponse addMember(
-            Long organizationId,
-            AddMemberRequest request,
-            Long currentUserId) {
-
-        OrganizationMember currentMember =
-                getAuthorizedMember(
-                        organizationId,
-                        currentUserId);
-
-        checkAdminOrOwner(currentMember);
-
-        getOrganizationOrThrow(organizationId);
-
-        // OWNER cannot be assigned to a new member
-        if (request.role() == OrganizationRole.OWNER) {
-            throw new BadRequestException(
-                    "OWNER role cannot be assigned to a new member");
-        }
-
-        // Check whether the user is already a member
-        if (memberRepository.existsByOrganizationIdAndUserId(
-                organizationId,
-                request.userId())) {
+        /*
+         * Only ADMIN can delete the organization.
+         */
+        if (!"ADMIN".equals(user.getRole())) {
 
             throw new BadRequestException(
-                    "User is already a member of this organization");
+                    "Only ADMIN can delete the organization"
+            );
         }
 
-        /*
-         * User validation is temporarily removed.
-         *
-         * OrganizationService is currently independent from UserService.
-         * We only store the userId.
-         *
-         * Later, when OpenFeign + Eureka are added, you can validate
-         * the user through UserService here.
-         */
+        getOrganizationOrThrow(
+                organizationId
+        );
 
-        OrganizationMember member =
-                OrganizationMember.builder()
-                        .organizationId(organizationId)
-                        .userId(request.userId())
-                        .role(request.role())
-                        .build();
-
-        member = memberRepository.save(member);
-
-        /*
-         * Since UserService is not connected yet,
-         * we cannot return user name/email.
-         *
-         * So return only information available in this service.
-         */
-        return new OrganizationMemberResponse(
-                member.getId(),
-                member.getUserId(),
-                null,
-                null,
-                member.getRole(),
-                member.getJoinedAt()
+        organizationRepository.deleteById(
+                organizationId
         );
     }
 
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<OrganizationMemberResponse> getMembers(
-            Long organizationId,
-            Long currentUserId) {
+    // =========================================================
+    // GET CURRENT USER
+    // =========================================================
 
-        getAuthorizedMember(
-                organizationId,
-                currentUserId);
+    private JwtUserPrincipal getCurrentUser() {
 
-        List<OrganizationMember> members =
-                memberRepository.findByOrganizationId(
-                        organizationId);
+        Object principal =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication()
+                        .getPrincipal();
 
-        return members.stream()
-                .map(this::mapMemberToResponse)
-                .toList();
+        if (!(principal instanceof JwtUserPrincipal)) {
+
+            throw new BadRequestException(
+                    "Invalid authentication"
+            );
+        }
+
+        return (JwtUserPrincipal) principal;
     }
 
 
-    @Override
-    public OrganizationMemberResponse updateMemberRole(
+    // =========================================================
+    // ORGANIZATION ACCESS VALIDATION
+    // =========================================================
+
+    private void validateOrganizationAccess(
             Long organizationId,
-            Long userId,
-            UpdateMemberRoleRequest request,
-            Long currentUserId) {
+            JwtUserPrincipal user) {
 
-        OrganizationMember currentMember =
-                getAuthorizedMember(
-                        organizationId,
-                        currentUserId);
+        if (!organizationId.equals(
+                user.getOrganizationId())) {
 
-        checkAdminOrOwner(currentMember);
-
-        OrganizationMember member =
-                memberRepository
-                        .findByOrganizationIdAndUserId(
-                                organizationId,
-                                userId)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Organization member not found"));
-
-        if (member.getRole() == OrganizationRole.OWNER) {
             throw new BadRequestException(
-                    "Owner role cannot be changed");
+                    "You do not have access to this organization"
+            );
         }
-
-        if (request.role() == OrganizationRole.OWNER) {
-            throw new BadRequestException(
-                    "Cannot assign OWNER role");
-        }
-
-        member.setRole(request.role());
-
-        memberRepository.save(member);
-
-        return mapMemberToResponse(member);
     }
 
 
-    @Override
-    public void removeMember(
-            Long organizationId,
-            Long userId,
-            Long currentUserId) {
-
-        OrganizationMember currentMember =
-                getAuthorizedMember(
-                        organizationId,
-                        currentUserId);
-
-        checkAdminOrOwner(currentMember);
-
-        OrganizationMember member =
-                memberRepository
-                        .findByOrganizationIdAndUserId(
-                                organizationId,
-                                userId)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Organization member not found"));
-
-        if (member.getRole() == OrganizationRole.OWNER) {
-            throw new BadRequestException(
-                    "Organization owner cannot be removed");
-        }
-
-        memberRepository.delete(member);
-    }
-
+    // =========================================================
+    // FIND ORGANIZATION
+    // =========================================================
 
     private Organization getOrganizationOrThrow(
             Long organizationId) {
 
-        return organizationRepository.findById(organizationId)
+        return organizationRepository
+                .findById(organizationId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "Organization not found with id: "
-                                        + organizationId));
+                                        + organizationId
+                        )
+                );
     }
 
 
-    private OrganizationMember getAuthorizedMember(
-            Long organizationId,
-            Long userId) {
+    // =========================================================
+    // SLUG GENERATION
+    // =========================================================
 
-        return memberRepository
-                .findByOrganizationIdAndUserId(
-                        organizationId,
-                        userId)
-                .orElseThrow(() ->
-                        new BadRequestException(
-                                "You are not a member of this organization"));
-    }
+    private String generateUniqueSlug(
+            String name) {
 
-
-    private void checkAdminOrOwner(
-            OrganizationMember member) {
-
-        if (member.getRole() != OrganizationRole.OWNER
-                && member.getRole() != OrganizationRole.ADMIN) {
-
-            throw new BadRequestException(
-                    "Only OWNER or ADMIN can perform this operation");
-        }
-    }
-
-
-    private String generateUniqueSlug(String name) {
-
-        String baseSlug = name
-                .toLowerCase(Locale.ROOT)
-                .trim()
-                .replaceAll("[^a-z0-9]+", "-")
-                .replaceAll("(^-|-$)", "");
+        String baseSlug =
+                name
+                        .toLowerCase(Locale.ROOT)
+                        .trim()
+                        .replaceAll(
+                                "[^a-z0-9]+",
+                                "-"
+                        )
+                        .replaceAll(
+                                "(^-|-$)",
+                                ""
+                        );
 
         String slug = baseSlug;
+
         int counter = 1;
 
-        while (organizationRepository.existsBySlug(slug)) {
-            slug = baseSlug + "-" + counter;
+        while (organizationRepository
+                .existsBySlug(slug)) {
+
+            slug =
+                    baseSlug
+                            + "-"
+                            + counter;
+
             counter++;
         }
 
         return slug;
     }
 
+
+    // =========================================================
+    // MAP RESPONSE
+    // =========================================================
 
     private OrganizationResponse mapToResponse(
             Organization organization) {
@@ -374,22 +329,6 @@ public class OrganizationServiceImpl implements OrganizationService {
                 organization.getDescription(),
                 organization.getCreatedAt(),
                 organization.getUpdatedAt()
-        );
-    }
-
-
-    private OrganizationMemberResponse mapMemberToResponse(
-            OrganizationMember member) {
-
-
-
-        return new OrganizationMemberResponse(
-                member.getId(),
-                member.getUserId(),
-                null,
-                null,
-                member.getRole(),
-                member.getJoinedAt()
         );
     }
 }

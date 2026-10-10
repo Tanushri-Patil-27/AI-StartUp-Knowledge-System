@@ -8,13 +8,17 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.ai.document.security.JwtAuthenticationFilter;
+
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtAuthenticationFilter) {
+
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
@@ -33,11 +37,13 @@ public class SecurityConfig {
 
             .authorizeHttpRequests(auth -> auth
 
+                // Public health endpoints
                 .requestMatchers(
                     "/actuator/health",
                     "/actuator/info"
                 ).permitAll()
 
+                // Everything else requires JWT
                 .anyRequest().authenticated()
             )
 

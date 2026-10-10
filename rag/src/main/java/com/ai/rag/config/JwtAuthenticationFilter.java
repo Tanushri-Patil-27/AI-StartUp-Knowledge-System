@@ -46,9 +46,10 @@ public class JwtAuthenticationFilter
                 request.getHeader("Authorization");
 
 
-        /*
-         * No Authorization header.
-         */
+        // =====================================================
+        // NO JWT
+        // =====================================================
+
         if (authorizationHeader == null
                 || !authorizationHeader.startsWith("Bearer ")) {
 
@@ -63,9 +64,10 @@ public class JwtAuthenticationFilter
 
         try {
 
-            /*
-             * Validate JWT.
-             */
+            // =================================================
+            // VALIDATE JWT
+            // =================================================
+
             if (!jwtService.isTokenValid(token)) {
 
                 filterChain.doFilter(request, response);
@@ -73,9 +75,10 @@ public class JwtAuthenticationFilter
             }
 
 
-            /*
-             * Extract information from JWT.
-             */
+            // =================================================
+            // EXTRACT JWT CLAIMS
+            // =================================================
+
             String email =
                     jwtService.extractEmail(token);
 
@@ -85,37 +88,59 @@ public class JwtAuthenticationFilter
             Long userId =
                     jwtService.extractUserId(token);
 
+            Long organizationId =
+                    jwtService.extractOrganizationId(token);
 
-            /*
-             * Prefer userId as authentication name.
-             *
-             * Organization access checks need user ID.
-             */
-            String principal;
 
-            if (userId != null) {
-                principal = userId.toString();
-            } else {
-                /*
-                 * Temporary fallback until User Service
-                 * JWT contains userId.
-                 */
-                principal = email;
+            // =================================================
+            // REQUIRED CLAIMS
+            // =================================================
+
+            if (userId == null) {
+
+                throw new IllegalArgumentException(
+                        "JWT does not contain userId"
+                );
+            }
+
+            if (organizationId == null) {
+
+                throw new IllegalArgumentException(
+                        "JWT does not contain organizationId"
+                );
             }
 
 
-            /*
-             * Create authorities.
-             */
+            // =================================================
+            // CREATE PRINCIPAL
+            // =================================================
+
+            JwtUserPrincipal principal =
+                    new JwtUserPrincipal(
+                            userId,
+                            email,
+                            role,
+                            organizationId
+                    );
+
+
+            // =================================================
+            // CREATE AUTHORITIES
+            // =================================================
+
             List<SimpleGrantedAuthority> authorities =
                     role == null
                             ? List.of()
                             : List.of(
-                                new SimpleGrantedAuthority(
-                                    "ROLE_" + role
-                                )
+                                    new SimpleGrantedAuthority(
+                                            "ROLE_" + role
+                                    )
                             );
 
+
+            // =================================================
+            // CREATE AUTHENTICATION
+            // =================================================
 
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
@@ -125,9 +150,10 @@ public class JwtAuthenticationFilter
                     );
 
 
-            /*
-             * Store authentication in SecurityContext.
-             */
+            // =================================================
+            // STORE AUTHENTICATION
+            // =================================================
+
             SecurityContextHolder
                     .getContext()
                     .setAuthentication(authentication);

@@ -4,14 +4,15 @@ import com.example.OrganizationService.dto.CreateOrganizationRequest;
 import com.example.OrganizationService.dto.OrganizationResponse;
 import com.example.OrganizationService.dto.UpdateOrganizationRequest;
 import com.example.OrganizationService.service.OrganizationService;
+
 import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/organizations")
@@ -20,17 +21,19 @@ public class OrganizationController {
 
     private final OrganizationService organizationService;
 
+
+    // =========================================================
+    // CREATE ORGANIZATION
+    // =========================================================
+
     @PostMapping
     public ResponseEntity<OrganizationResponse> createOrganization(
-            @Valid @RequestBody CreateOrganizationRequest request,
-            Authentication authentication) {
-
-        Long currentUserId = getCurrentUserId(authentication);
+            @Valid @RequestBody
+            CreateOrganizationRequest request) {
 
         OrganizationResponse response =
                 organizationService.createOrganization(
-                        request,
-                        currentUserId
+                        request
                 );
 
         return ResponseEntity
@@ -38,65 +41,58 @@ public class OrganizationController {
                 .body(response);
     }
 
-    @GetMapping("/my")
-    public ResponseEntity<List<OrganizationResponse>> getMyOrganizations(
-            Authentication authentication) {
 
-        Long currentUserId = getCurrentUserId(authentication);
-
-        return ResponseEntity.ok(
-                organizationService.getMyOrganizations(currentUserId)
-        );
-    }
+    // =========================================================
+    // GET ORGANIZATION
+    // =========================================================
 
     @GetMapping("/{organizationId}")
     public ResponseEntity<OrganizationResponse> getOrganization(
-            @PathVariable Long organizationId,
-            Authentication authentication) {
-
-        Long currentUserId = getCurrentUserId(authentication);
+            @PathVariable Long organizationId) {
 
         return ResponseEntity.ok(
                 organizationService.getOrganization(
-                        organizationId,
-                        currentUserId
+                        organizationId
                 )
         );
     }
+
+
+    // =========================================================
+    // UPDATE ORGANIZATION
+    // =========================================================
 
     @PutMapping("/{organizationId}")
     public ResponseEntity<OrganizationResponse> updateOrganization(
             @PathVariable Long organizationId,
-            @Valid @RequestBody UpdateOrganizationRequest request,
-            Authentication authentication) {
 
-        Long currentUserId = getCurrentUserId(authentication);
+            @Valid
+            @RequestBody
+            UpdateOrganizationRequest request) {
 
         return ResponseEntity.ok(
                 organizationService.updateOrganization(
                         organizationId,
-                        request,
-                        currentUserId
+                        request
                 )
         );
     }
 
+
+    // =========================================================
+    // DELETE ORGANIZATION
+    // =========================================================
+
     @DeleteMapping("/{organizationId}")
     public ResponseEntity<Void> deleteOrganization(
-            @PathVariable Long organizationId,
-            Authentication authentication) {
-
-        Long currentUserId = getCurrentUserId(authentication);
+            @PathVariable Long organizationId) {
 
         organizationService.deleteOrganization(
-                organizationId,
-                currentUserId
+                organizationId
         );
 
-        return ResponseEntity.noContent().build();
-    }
-
-    private Long getCurrentUserId(Authentication authentication) {
-        return Long.valueOf(authentication.getName());
+        return ResponseEntity
+                .noContent()
+                .build();
     }
 }

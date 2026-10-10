@@ -1,4 +1,4 @@
-package com.ai.document.config;
+package com.ai.document.security;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -8,6 +8,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.ai.document.config.JwtService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -20,6 +22,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
 
     public JwtAuthenticationFilter(JwtService jwtService) {
+
         this.jwtService = jwtService;
     }
 
@@ -34,10 +37,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 request.getHeader("Authorization");
 
         String token = null;
+
         String email = null;
+
         String role = null;
 
-         
+        Long userId = null;
+
+        Long organizationId = null;
+
+        // =====================================================
+        // CHECK AUTHORIZATION HEADER
+        // =====================================================
 
         if (authHeader != null &&
                 authHeader.startsWith("Bearer ")) {
@@ -50,18 +61,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 role = jwtService.extractRole(token);
 
+                userId = jwtService.extractUserId(token);
+
+                organizationId =
+                        jwtService.extractOrganizationId(token);
+
             } catch (Exception e) {
 
-                // Invalid JWT
                 email = null;
+
                 role = null;
+
+                userId = null;
+
+                organizationId = null;
             }
         }
 
-        
+        // =====================================================
+        // CREATE AUTHENTICATION
+        // =====================================================
 
         if (email != null &&
                 role != null &&
+                userId != null &&
+                organizationId != null &&
                 SecurityContextHolder
                         .getContext()
                         .getAuthentication() == null) {
@@ -73,19 +97,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 "ROLE_" + role
                         );
 
-                UsernamePasswordAuthenticationToken
-                        authentication =
-                        new UsernamePasswordAuthenticationToken(
+                JwtUserPrincipal principal =
+                        new JwtUserPrincipal(
+                                userId,
                                 email,
+                                role,
+                                organizationId
+                        );
+
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                principal,
                                 null,
                                 Collections.singletonList(authority)
                         );
 
                 SecurityContextHolder
                         .getContext()
-                        .setAuthentication(
-                                authentication
-                        );
+                        .setAuthentication(authentication);
             }
         }
 

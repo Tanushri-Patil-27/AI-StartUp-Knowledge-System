@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.util.Date;
 
 @Service
 public class JwtService {
@@ -39,10 +40,6 @@ public class JwtService {
     }
 
 
-    /**
-     * User ID is expected to be stored inside
-     * the JWT as the "userId" claim.
-     */
     public Long extractUserId(String token) {
 
         Object userId =
@@ -63,6 +60,26 @@ public class JwtService {
     }
 
 
+    public Long extractOrganizationId(String token) {
+
+        Object organizationId =
+                extractAllClaims(token)
+                        .get("organizationId");
+
+        if (organizationId == null) {
+            return null;
+        }
+
+        if (organizationId instanceof Number number) {
+            return number.longValue();
+        }
+
+        return Long.parseLong(
+                organizationId.toString()
+        );
+    }
+
+
     public boolean isTokenValid(String token) {
 
         try {
@@ -72,7 +89,7 @@ public class JwtService {
 
             return claims.getExpiration() != null
                     && claims.getExpiration()
-                    .after(new java.util.Date());
+                    .after(new Date());
 
         } catch (Exception e) {
 

@@ -1,5 +1,10 @@
 package com.ai.user.service;
 
+import java.time.LocalDateTime;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import com.ai.user.dto.LoginRequest;
 import com.ai.user.dto.LoginResponse;
 import com.ai.user.dto.RegisterRequest;
@@ -8,11 +13,6 @@ import com.ai.user.model.User;
 import com.ai.user.repository.InvitationRepository;
 import com.ai.user.repository.UserRepository;
 import com.ai.user.security.JwtService;
-
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
 
 @Service
 public class AuthService {
@@ -48,14 +48,21 @@ public class AuthService {
                         )
                 );
 
-        // Check invitation status
+        // =====================================================
+        // CHECK INVITATION STATUS
+        // =====================================================
+
         if (invitation.isUsed()) {
+
             throw new RuntimeException(
                     "Invitation has already been used"
             );
         }
 
-        // Check invitation expiration
+        // =====================================================
+        // CHECK INVITATION EXPIRATION
+        // =====================================================
+
         if (invitation.getExpiresAt()
                 .isBefore(LocalDateTime.now())) {
 
@@ -64,7 +71,10 @@ public class AuthService {
             );
         }
 
-        // Email in registration must match invitation
+        // =====================================================
+        // EMAIL MUST MATCH INVITATION
+        // =====================================================
+
         if (!invitation.getEmail()
                 .equalsIgnoreCase(request.getEmail())) {
 
@@ -73,7 +83,10 @@ public class AuthService {
             );
         }
 
-        // Check whether email already exists
+        // =====================================================
+        // CHECK WHETHER EMAIL ALREADY EXISTS
+        // =====================================================
+
         if (userRepository.existsByEmail(request.getEmail())) {
 
             throw new RuntimeException(
@@ -81,9 +94,15 @@ public class AuthService {
             );
         }
 
+        // =====================================================
+        // CREATE USER
+        // =====================================================
+
         User user = new User();
 
-        user.setName(request.getName());
+        user.setName(
+                request.getName()
+        );
 
         user.setEmail(
                 request.getEmail()
@@ -118,7 +137,10 @@ public class AuthService {
 
         userRepository.save(user);
 
-        // Mark invitation as used
+        // =====================================================
+        // MARK INVITATION AS USED
+        // =====================================================
+
         invitation.setUsed(true);
 
         invitationRepository.save(invitation);
@@ -141,12 +163,20 @@ public class AuthService {
                         )
                 );
 
+        // =====================================================
+        // CHECK USER ACCOUNT
+        // =====================================================
+
         if (!user.isEnabled()) {
 
             throw new RuntimeException(
                     "User account is disabled"
             );
         }
+
+        // =====================================================
+        // CHECK PASSWORD
+        // =====================================================
 
         if (!passwordEncoder.matches(
                 request.getPassword(),
@@ -157,11 +187,29 @@ public class AuthService {
             );
         }
 
+        // =====================================================
+        // GENERATE JWT
+        // =====================================================
+        //
+        // JWT now contains:
+        //
+        // userId
+        // email
+        // role
+        // organizationId
+        //
+        // =====================================================
+
         String token = jwtService.generateToken(
+                user.getId(),
                 user.getEmail(),
                 user.getRole().name(),
                 user.getOrganizationId()
         );
+
+        // =====================================================
+        // RETURN LOGIN RESPONSE
+        // =====================================================
 
         return new LoginResponse(
                 token,

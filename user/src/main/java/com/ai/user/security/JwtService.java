@@ -39,6 +39,7 @@ public class JwtService {
     // =========================================================
 
     public String generateToken(
+            Long userId,
             String email,
             String role,
             Long organizationId) {
@@ -46,7 +47,13 @@ public class JwtService {
         Map<String, Object> claims =
                 new HashMap<>();
 
+        // User ID
+        claims.put("userId", userId);
+
+        // User role
         claims.put("role", role);
+
+        // Organization ID
         claims.put("organizationId", organizationId);
 
         Date now = new Date();
@@ -63,6 +70,24 @@ public class JwtService {
                 .expiration(expiryDate)
                 .signWith(getSigningKey())
                 .compact();
+    }
+
+    // =========================================================
+    // EXTRACT USER ID
+    // =========================================================
+
+    public Long extractUserId(String token) {
+
+        Number userId =
+                extractAllClaims(token)
+                        .get(
+                                "userId",
+                                Number.class
+                        );
+
+        return userId != null
+                ? userId.longValue()
+                : null;
     }
 
     // =========================================================
