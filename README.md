@@ -360,6 +360,9 @@ This project explores how modern backend and AI technologies can work together t
 B.Tech Computer Engineering | Java Backend Development | Spring Boot Microservices | Cloud & DevOps | AI Engineering
 
 - GitHub: [Tanushri-Patil-27](https://github.com/Tanushri-Patil-27)
+-GitHub: [Monal-Patil](https://github.com/MonalPatil467)
+
+
 - Project Repository: [AI-StartUp-Knowledge-System](https://github.com/Tanushri-Patil-27/AI-StartUp-Knowledge-System)
 
 ---
